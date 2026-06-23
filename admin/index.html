@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key System - Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🔑 KeySystem</h2>
+            </div>
+            <nav class="menu">
+                <a href="#" data-tab="dashboard" class="menu-item active">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="#" data-tab="generate" class="menu-item">
+                    <span>➕</span> Anahtar Oluştur
+                </a>
+                <a href="#" data-tab="keys" class="menu-item">
+                    <span>📋</span> Anahtarlar
+                </a>
+                <a href="#" data-tab="analytics" class="menu-item">
+                    <span>📈</span> Analizler
+                </a>
+                <a href="#" data-tab="settings" class="menu-item">
+                    <span>⚙️</span> Ayarlar
+                </a>
+            </nav>
+            <button id="logout" class="logout-btn">Çıkış</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-content active">
+                <h1>Dashboard</h1>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">🔑</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Toplam Anahtar</span>
+                            <span class="stat-value" id="stat-total">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Kullanılan</span>
+                            <span class="stat-value" id="stat-used">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Kullanılmayan</span>
+                            <span class="stat-value" id="stat-unused">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🚫</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Yasaklı</span>
+                            <span class="stat-value" id="stat-banned">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Son 7 Gün Aktivite</h3>
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Generate Key Tab -->
+            <section id="generate" class="tab-content">
+                <h1>Anahtar Oluştur</h1>
+                <form id="generateForm" class="form-card">
+                    <div class="form-group">
+                        <label for="keyType">Anahtar Türü</label>
+                        <select id="keyType" required>
+                            <option value="permanent">Kalıcı</option>
+                            <option value="trial">Deneme (7 gün)</option>
+                            <option value="one-time">Tek Kullanımlık</option>
+                            <option value="premium">Premium (30 gün)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expiresIn">Bitiş Süresi (gün)</label>
+                        <input type="number" id="expiresIn" placeholder="Boş = Hiç Bitmesin" min="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notlar</label>
+                        <textarea id="notes" placeholder="İsteğe bağlı..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">🔑 Anahtar Oluştur</button>
+                </form>
+
+                <div id="generatedKey" class="result-card" style="display: none;">
+                    <h3>✅ Anahtar Başarıyla Oluşturuldu!</h3>
+                    <div class="key-display">
+                        <code id="keyCode"></code>
+                        <button type="button" class="btn-copy" onclick="copyKey()">📋 Kopyala</button>
+                    </div>
+                    <p id="keyInfo"></p>
+                </div>
+            </section>
+
+            <!-- Keys List Tab -->
+            <section id="keys" class="tab-content">
+                <h1>Anahtarlar</h1>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Anahtar ID veya Not ara...">
+                    <select id="filterType">
+                        <option value="">Tümü</option>
+                        <option value="permanent">Kalıcı</option>
+                        <option value="trial">Deneme</option>
+                        <option value="one-time">Tek Kullanımlık</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>
+
+                <table class="keys-table">
+                    <thead>
+                        <tr>
+                            <th>Anahtar ID</th>
+                            <th>Türü</th>
+                            <th>Durum</th>
+                            <th>Kullanım</th>
+                            <th>Bitiş</th>
+                            <th>Oluşturma</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keysTable">
+                        <tr><td colspan="7" style="text-align: center; padding: 20px;">Yükleniyor...</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination">
+                    <button id="prevBtn" class="btn-pagination">← Önceki</button>
+                    <span id="pageInfo"></span>
+                    <button id="nextBtn" class="btn-pagination">Sonraki →</button>
+                </div>
+            </section>
+
+            <!-- Analytics Tab -->
+            <section id="analytics" class="tab-content">
+                <h1>Analizler</h1>
+                <div class="analytics-filters">
+                    <select id="analyticsRange">
+                        <option value="7">Son 7 Gün</option>
+                        <option value="30">Son 30 Gün</option>
+                        <option value="90">Son 90 Gün</option>
+                    </select>
+                </div>
+
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Doğrulama Oranı</h3>
+                        <div class="analytics-stat" id="validationRate">0%</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Ortalama Kullanım</h3>
+                        <div class="analytics-stat" id="avgUsage">0</div>
+                    </div>
+                </div>
+
+                <div class="log-container">
+                    <h3>Son Aktiviteler</h3>
+                    <div id="activityLog" class="activity-log">
+                        <p style="text-align: center; color: #999;">Yükleniyor...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="settings" class="tab-content">
+                <h1>Ayarlar</h1>
+                <div class="form-card">
+                    <h3>API Anahtarı</h3>
+                    <div class="api-key-display">
+                        <code id="apiKey">••••••••••••••••</code>
+                        <button type="button" class="btn-copy" onclick="showApiKey()">👁️ Göster</button>
+                        <button type="button" class="btn-copy" onclick="copyApiKey()">📋 Kopyala</button>
+                    </div>
+                </div>
+
+                <div class="form-card">
+                    <h3>Tehlikeli İşlemler</h3>
+                    <button class="btn btn-danger" onclick="resetAllData()">
+                        🗑️ Tüm Verileri Sıfırla
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+                      </html>
